@@ -386,7 +386,7 @@
       { key: 'iron', en: 'iron', he: 'ברזל', image: './assets/images/iron.png' },
       { key: 'coal', en: 'coal', he: 'פחם', image: './assets/images/coal.png' },
       { key: 'stone', en: 'stone', he: 'אבן', image: './assets/images/stone.png' },
-      { key: 'dirt', en: 'dirt', he: 'עפר', image: './assets/images/dirt.png' },
+      { key: 'dirt', en: 'dirt', he: 'עפר', heSpeech: 'עָפָר', image: './assets/images/dirt.png' },
       { key: 'sand', en: 'sand', he: 'חול', image: './assets/images/sand.png' },
       { key: 'glass', en: 'glass', he: 'זכוכית', image: './assets/images/glass.png' },
       { key: 'bed', en: 'bed', he: 'מיטה', image: './assets/images/bed.png' },
@@ -400,7 +400,7 @@
       { key: 'map', en: 'map', he: 'מפה', image: './assets/images/map.png' },
       { key: 'boat', en: 'boat', he: 'סירה', image: './assets/images/boat.png' },
       { key: 'cake', en: 'cake', he: 'עוגה', image: './assets/images/cake.png' },
-      { key: 'golden_apple', en: 'golden apple', he: 'תפוח זהב', image: './assets/images/golden_apple.png' },
+      { key: 'golden_apple', en: 'golden apple', he: 'תפוח זהב', heSpeech: 'תַּפּוּחַ זָהָב', image: './assets/images/golden_apple.png' },
       { key: 'zombie', en: 'zombie', he: 'זומבי', image: './assets/images/zombie.png' },
       { key: 'skeleton', en: 'skeleton', he: 'שלד', image: './assets/images/skeleton.png' },
       { key: 'creeper', en: 'creeper', he: 'קריפר', image: './assets/images/creeper.png' },
@@ -410,7 +410,24 @@
       { key: 'sheep', en: 'sheep', he: 'כבשה', heSpeech: 'כִּבְשָׂה', image: './assets/images/sheep.png' },
       { key: 'chicken', en: 'chicken', he: 'תרנגולת', image: './assets/images/chicken.png' },
       { key: 'wolf', en: 'wolf', he: 'זאב', image: './assets/images/wolf.png' },
-      { key: 'cat', en: 'cat', he: 'חתול', image: './assets/images/cat.png' }
+      { key: 'cat', en: 'cat', he: 'חתול', image: './assets/images/cat.png' },
+      { key: 'bee', en: 'bee', he: 'דבורה', image: './assets/images/bee.png' },
+      { key: 'rabbit', en: 'rabbit', he: 'ארנב', image: './assets/images/rabbit.png' },
+      { key: 'horse', en: 'horse', he: 'סוס', image: './assets/images/horse.png' },
+      { key: 'donkey', en: 'donkey', he: 'חמור', image: './assets/images/donkey.png' },
+      { key: 'llama', en: 'llama', he: 'לאמה', image: './assets/images/llama.png' },
+      { key: 'camel', en: 'camel', he: 'גמל', image: './assets/images/camel.png' },
+      { key: 'fox', en: 'fox', he: 'שועל', image: './assets/images/fox.png' },
+      { key: 'frog', en: 'frog', he: 'צפרדע', image: './assets/images/frog.png' },
+      { key: 'turtle', en: 'turtle', he: 'צב', image: './assets/images/turtle.png' },
+      { key: 'dolphin', en: 'dolphin', he: 'דולפין', image: './assets/images/dolphin.png' },
+      { key: 'bat', en: 'bat', he: 'עטלף', image: './assets/images/bat.png' },
+      { key: 'parrot', en: 'parrot', he: 'תוכי', image: './assets/images/parrot.png' },
+      { key: 'panda', en: 'panda', he: 'פנדה', image: './assets/images/panda.png' },
+      { key: 'polar_bear', en: 'polar bear', he: 'דוב קוטב', image: './assets/images/polar_bear.png' },
+      { key: 'goat', en: 'goat', he: 'עז', heSpeech: 'עֵז', image: './assets/images/goat.png' },
+      { key: 'mushroom', en: 'mushroom', he: 'פטרייה', image: './assets/images/mushroom.png' },
+      { key: 'flower', en: 'flower', he: 'פרח', image: './assets/images/flower.png' }
     ];
 
     const scoreEl = document.getElementById('score');
@@ -441,6 +458,7 @@
     const statusEl = document.getElementById('status');
 
     let mode = 'learn';
+    const modeStarted = { learn: false, game: false, memory: false };
     let score = 0;
     let streak = 0;
     let round = 0;
@@ -514,19 +532,22 @@
       turnChipEl.style.display = mode === 'memory' ? 'inline-block' : 'none';
 
       if (mode === 'learn') {
-        learnWrapEl.classList.add('visible');
+        learnWrapEl.classList.remove('visible');
         memoryWrapEl.classList.remove('visible');
         choicesEl.style.display = 'none';
-        nextBtn.style.display = 'inline-block';
-        repeatBtn.style.display = 'inline-block';
+        nextBtn.style.display = modeStarted.learn ? 'inline-block' : 'none';
+        repeatBtn.style.display = modeStarted.learn ? 'inline-block' : 'none';
+        learnImgEl.src = '';
+        learnHeEl.textContent = '';
+        learnEnEl.textContent = '';
         enPromptEl.textContent = 'Learning Mode';
-        hePromptEl.textContent = 'מצב למידה: עברית ואז אנגלית';
+        hePromptEl.textContent = 'לחצו Start כדי להתחיל מצב למידה';
       } else if (mode === 'game') {
         learnWrapEl.classList.remove('visible');
         memoryWrapEl.classList.remove('visible');
         choicesEl.style.display = 'grid';
         nextBtn.style.display = 'none';
-        repeatBtn.style.display = 'inline-block';
+        repeatBtn.style.display = modeStarted.game ? 'inline-block' : 'none';
         enPromptEl.textContent = 'Game Mode';
         hePromptEl.textContent = 'מצב משחק: בחרו את המילה הנכונה';
       } else {
@@ -561,6 +582,7 @@
     }
 
     function nextLearningWord() {
+      learnWrapEl.classList.add('visible');
       currentTarget = pickRandom(items);
       renderLearningCard(currentTarget);
       enPromptEl.textContent = `Learn: ${currentTarget.en}`;
@@ -749,7 +771,9 @@
     }
 
     function startMode() {
+      modeStarted[mode] = true;
       repeatBtn.disabled = false;
+      setMode(mode);
       if (mode === 'learn') {
         round = 0;
         score = 0;
