@@ -376,12 +376,12 @@
       { key: 'diamond', en: 'diamond', he: 'יהלום', image: './assets/images/diamond.png' },
       { key: 'gold', en: 'gold', he: 'זהב', image: './assets/images/gold.png' },
       { key: 'grass', en: 'grass', he: 'דשא', image: './assets/images/grass.png' },
-      { key: 'apple', en: 'apple', he: 'תפוח', image: './assets/images/apple.png' },
+      { key: 'apple', en: 'apple', he: 'תפוח', heSpeech: 'תַּפּוּחַ', image: './assets/images/apple.png' },
       { key: 'sword', en: 'sword', he: 'חרב', image: './assets/images/sword.png' },
       { key: 'pickaxe', en: 'pickaxe', he: 'מכוש', image: './assets/images/pickaxe.png' },
       { key: 'torch', en: 'torch', he: 'לפיד', image: './assets/images/torch.png' },
-      { key: 'bread', en: 'bread', he: 'לחם', image: './assets/images/bread.png' },
-      { key: 'water', en: 'water bucket', he: 'דלי מים', image: './assets/images/water_bucket.png' },
+      { key: 'bread', en: 'bread', he: 'לחם', heSpeech: 'לֶחֶם', image: './assets/images/bread.png' },
+      { key: 'water', en: 'water bucket', he: 'דלי מים', heSpeech: 'דֵּלִי מַיִם', image: './assets/images/water_bucket.png' },
       { key: 'tree', en: 'tree', he: 'עץ', image: './assets/images/tree.png' },
       { key: 'iron', en: 'iron', he: 'ברזל', image: './assets/images/iron.png' },
       { key: 'coal', en: 'coal', he: 'פחם', image: './assets/images/coal.png' },
@@ -407,7 +407,7 @@
       { key: 'spider', en: 'spider', he: 'עכביש', image: './assets/images/spider.png' },
       { key: 'cow', en: 'cow', he: 'פרה', image: './assets/images/cow.png' },
       { key: 'pig', en: 'pig', he: 'חזיר', image: './assets/images/pig.png' },
-      { key: 'sheep', en: 'sheep', he: 'כבשה', image: './assets/images/sheep.png' },
+      { key: 'sheep', en: 'sheep', he: 'כבשה', heSpeech: 'כִּבְשָׂה', image: './assets/images/sheep.png' },
       { key: 'chicken', en: 'chicken', he: 'תרנגולת', image: './assets/images/chicken.png' },
       { key: 'wolf', en: 'wolf', he: 'זאב', image: './assets/images/wolf.png' },
       { key: 'cat', en: 'cat', he: 'חתול', image: './assets/images/cat.png' }
@@ -479,6 +479,10 @@
       speechSynthesis.speak(utterance);
     }
 
+    function getHeSpeech(item) {
+      return item.heSpeech || item.he;
+    }
+
     function updateHUD() {
       scoreEl.textContent = score;
       streakEl.textContent = streak;
@@ -540,7 +544,7 @@
 
     function speakLearning(item) {
       speechSynthesis.cancel();
-      speak(item.he, 'he-IL', 0.82);
+      speak(getHeSpeech(item), 'he-IL', 0.82);
       setTimeout(() => speak(item.en, 'en-US', 0.86), 850);
     }
 
