@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minecraft English - Learn + Game</title>
+  <style>
+    :root {
+      --bg-a: #f8f4da;
+      --bg-b: #e9f7d4;
+      --panel: #ffffff;
+      --ink: #20303a;
+      --accent: #2f8f3b;
+      --accent-2: #f0ad3c;
+      --soft: #d6e9f7;
+      --wrong: #d84a4a;
+      --shadow: rgba(28, 47, 26, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 20%, #ffffff80 0 22%, transparent 23%),
+        radial-gradient(circle at 85% 80%, #ffffff70 0 25%, transparent 26%),
+        linear-gradient(160deg, var(--bg-a), var(--bg-b));
+      display: grid;
+      place-items: center;
+      padding: 16px;
+    }
+
+    .app {
+      width: min(1000px, 100%);
+      background: var(--panel);
+      border-radius: 20px;
+      box-shadow: 0 18px 40px var(--shadow);
+      overflow: hidden;
+      border: 4px solid #d7e7c3;
+    }
+
+    .top {
+      padding: 14px 18px;
+      background: linear-gradient(90deg, #e6f4dc, #fdf7da);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(1.1rem, 2vw, 1.5rem);
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .chip {
+      background: #fff;
+      border: 2px solid #dce9cf;
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+
+    .content {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .prompt {
+      text-align: center;
+      padding: 16px;
+      border-radius: 16px;
+      background: #f8fff2;
+      border: 2px dashed #b8d59a;
+    }
+
+    .prompt h2 {
+      margin: 0 0 8px;
+      font-size: clamp(1.4rem, 3.4vw, 2.2rem);
+    }
+
+    .prompt p {
+      margin: 0;
+      font-size: clamp(1rem, 2.4vw, 1.2rem);
+      font-weight: 700;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 11px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: transform 0.12s ease, filter 0.12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); filter: brightness(1.03); }
+    button:active { transform: translateY(1px); }
+
+    .btn-main { background: var(--accent); color: #fff; }
+    .btn-alt { background: var(--accent-2); color: #231; }
+    .btn-soft { background: var(--soft); color: #173248; }
+    .btn-mode.active { outline: 3px solid #215c6d44; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .choice {
+      background: #fff;
+      border: 3px solid #d9e5d0;
+      border-radius: 16px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      min-height: 180px;
+      align-content: start;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .choice img,
+    .learn-card img {
+      width: 100%;
+      aspect-ratio: 1/1;
+      object-fit: contain;
+      image-rendering: pixelated;
+      background: linear-gradient(160deg, #fbfff7, #edf8e6);
+      border-radius: 12px;
+      border: 2px solid #dbe8cc;
+      padding: 10px;
+      max-height: 220px;
+    }
+
+    .labels {
+      text-align: center;
+      line-height: 1.2;
+      min-height: 2.6em;
+      direction: rtl;
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .choice.correct {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 5px #2f8f3b22;
+    }
+
+    .choice.wrong {
+      border-color: var(--wrong);
+      box-shadow: 0 0 0 5px #d84a4a1f;
+    }
+
+    .learn-wrap {
+      display: none;
+      justify-content: center;
+    }
+
+    .learn-wrap.visible { display: flex; }
+
+    .learn-card {
+      width: min(340px, 100%);
+      background: #fff;
+      border: 3px solid #d9e5d0;
+      border-radius: 16px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .learn-he {
+      margin-top: 10px;
+      font-size: 2rem;
+      font-weight: 900;
+      direction: rtl;
+    }
+
+    .learn-en {
+      margin-top: 4px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #42535d;
+    }
+
+    .status {
+      text-align: center;
+      min-height: 1.2em;
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .footer {
+      text-align: center;
+      color: #41554a;
+      font-size: 0.92rem;
+      padding: 0 20px 20px;
+    }
+
+    @media (max-width: 740px) {
+      .grid { grid-template-columns: 1fr; }
+      .choice { min-height: 140px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="top">
+      <h1 class="title">Minecraft English Game</h1>
+      <div class="stats">
+        <span class="chip">Mode: <span id="modeLabel">Learning</span></span>
+        <span class="chip">Score: <span id="score">0</span></span>
+        <span class="chip">Streak: <span id="streak">0</span></span>
+        <span class="chip">Round: <span id="round">0</span></span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="prompt">
+        <h2 id="enPrompt">Press Start</h2>
+        <p id="hePrompt">לחצו התחלה</p>
+      </div>
+
+      <div class="controls">
+        <button id="modeLearnBtn" class="btn-soft btn-mode active">Learning / למידה</button>
+        <button id="modeGameBtn" class="btn-soft btn-mode">Game / משחק</button>
+        <button id="startBtn" class="btn-main">Start / התחל</button>
+        <button id="repeatBtn" class="btn-alt" disabled>Repeat Sound / שוב</button>
+        <button id="nextBtn" class="btn-alt">Next Word / מילה הבאה</button>
+      </div>
+
+      <div id="learnWrap" class="learn-wrap">
+        <div class="learn-card">
+          <img id="learnImg" alt="learning item" src="" />
+          <div id="learnHe" class="learn-he"></div>
+          <div id="learnEn" class="learn-en"></div>
+        </div>
+      </div>
+
+      <div id="choices" class="grid"></div>
+      <div id="status" class="status"></div>
+    </div>
+
+    <div class="footer">
+      Learning mode: Hebrew then English + image. Game mode: hear English only, choose image + Hebrew label.
+    </div>
+  </div>
+
+  <script>
+    const items = [
+      { key: 'diamond', en: 'diamond', he: 'יהלום', image: './assets/images/diamond.png' },
+      { key: 'gold', en: 'gold', he: 'זהב', image: './assets/images/gold.png' },
+      { key: 'grass', en: 'grass', he: 'דשא', image: './assets/images/grass.png' },
+      { key: 'apple', en: 'apple', he: 'תפוח', image: './assets/images/apple.png' },
+      { key: 'sword', en: 'sword', he: 'חרב', image: './assets/images/sword.png' },
+      { key: 'pickaxe', en: 'pickaxe', he: 'מכוש', image: './assets/images/pickaxe.png' },
+      { key: 'torch', en: 'torch', he: 'לפיד', image: './assets/images/torch.png' },
+      { key: 'bread', en: 'bread', he: 'לחם', image: './assets/images/bread.png' },
+      { key: 'water', en: 'water bucket', he: 'דלי מים', image: './assets/images/water_bucket.png' },
+      { key: 'tree', en: 'tree', he: 'עץ', image: './assets/images/tree.png' },
+      { key: 'iron', en: 'iron', he: 'ברזל', image: './assets/images/iron.png' },
+      { key: 'coal', en: 'coal', he: 'פחם', image: './assets/images/coal.png' },
+      { key: 'stone', en: 'stone', he: 'אבן', image: './assets/images/stone.png' },
+      { key: 'dirt', en: 'dirt', he: 'עפר', image: './assets/images/dirt.png' },
+      { key: 'sand', en: 'sand', he: 'חול', image: './assets/images/sand.png' },
+      { key: 'glass', en: 'glass', he: 'זכוכית', image: './assets/images/glass.png' },
+      { key: 'bed', en: 'bed', he: 'מיטה', image: './assets/images/bed.png' },
+      { key: 'chest', en: 'chest', he: 'תיבה', image: './assets/images/chest.png' },
+      { key: 'furnace', en: 'furnace', he: 'תנור', image: './assets/images/furnace.png' },
+      { key: 'crafting_table', en: 'crafting table', he: 'שולחן יצירה', image: './assets/images/crafting_table.png' },
+      { key: 'door', en: 'door', he: 'דלת', image: './assets/images/door.png' },
+      { key: 'chestplate', en: 'diamond chestplate', he: 'שריון יהלום', image: './assets/images/chestplate.png' },
+      { key: 'shovel', en: 'shovel', he: 'את', image: './assets/images/shovel.png' },
+      { key: 'axe', en: 'axe', he: 'גרזן', image: './assets/images/axe.png' },
+      { key: 'map', en: 'map', he: 'מפה', image: './assets/images/map.png' },
+      { key: 'boat', en: 'boat', he: 'סירה', image: './assets/images/boat.png' },
+      { key: 'cake', en: 'cake', he: 'עוגה', image: './assets/images/cake.png' },
+      { key: 'golden_apple', en: 'golden apple', he: 'תפוח זהב', image: './assets/images/golden_apple.png' },
+      { key: 'zombie', en: 'zombie', he: 'זומבי', image: './assets/images/zombie.png' },
+      { key: 'skeleton', en: 'skeleton', he: 'שלד', image: './assets/images/skeleton.png' },
+      { key: 'creeper', en: 'creeper', he: 'קריפר', image: './assets/images/creeper.png' },
+      { key: 'spider', en: 'spider', he: 'עכביש', image: './assets/images/spider.png' },
+      { key: 'cow', en: 'cow', he: 'פרה', image: './assets/images/cow.png' },
+      { key: 'pig', en: 'pig', he: 'חזיר', image: './assets/images/pig.png' },
+      { key: 'sheep', en: 'sheep', he: 'כבשה', image: './assets/images/sheep.png' },
+      { key: 'chicken', en: 'chicken', he: 'תרנגולת', image: './assets/images/chicken.png' },
+      { key: 'wolf', en: 'wolf', he: 'זאב', image: './assets/images/wolf.png' },
+      { key: 'cat', en: 'cat', he: 'חתול', image: './assets/images/cat.png' }
+    ];
+
+    const scoreEl = document.getElementById('score');
+    const streakEl = document.getElementById('streak');
+    const roundEl = document.getElementById('round');
+    const modeLabelEl = document.getElementById('modeLabel');
+    const enPromptEl = document.getElementById('enPrompt');
+    const hePromptEl = document.getElementById('hePrompt');
+    const startBtn = document.getElementById('startBtn');
+    const repeatBtn = document.getElementById('repeatBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const modeLearnBtn = document.getElementById('modeLearnBtn');
+    const modeGameBtn = document.getElementById('modeGameBtn');
+    const choicesEl = document.getElementById('choices');
+    const learnWrapEl = document.getElementById('learnWrap');
+    const learnImgEl = document.getElementById('learnImg');
+    const learnHeEl = document.getElementById('learnHe');
+    const learnEnEl = document.getElementById('learnEn');
+    const statusEl = document.getElementById('status');
+
+    let mode = 'learn';
+    let score = 0;
+    let streak = 0;
+    let round = 0;
+    let currentTarget = null;
+    let currentChoices = [];
+    let acceptingAnswer = false;
+
+    function pickRandom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function shuffle(arr) {
+      const c = [...arr];
+      for (let i = c.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [c[i], c[j]] = [c[j], c[i]];
+      }
+      return c;
+    }
+
+    function speak(text, lang = 'en-US', rate = 0.86) {
+      if (!('speechSynthesis' in window)) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+      utterance.rate = rate;
+      const voices = speechSynthesis.getVoices();
+      const voice = voices.find(v => v.lang.toLowerCase().startsWith(lang.slice(0, 2).toLowerCase()));
+      if (voice) utterance.voice = voice;
+      speechSynthesis.speak(utterance);
+    }
+
+    function updateHUD() {
+      scoreEl.textContent = score;
+      streakEl.textContent = streak;
+      roundEl.textContent = round;
+      modeLabelEl.textContent = mode === 'learn' ? 'Learning' : 'Game';
+    }
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      modeLearnBtn.classList.toggle('active', mode === 'learn');
+      modeGameBtn.classList.toggle('active', mode === 'game');
+      choicesEl.innerHTML = '';
+      statusEl.textContent = '';
+      speechSynthesis.cancel();
+
+      if (mode === 'learn') {
+        learnWrapEl.classList.add('visible');
+        choicesEl.style.display = 'none';
+        nextBtn.style.display = 'inline-block';
+        enPromptEl.textContent = 'Learning Mode';
+        hePromptEl.textContent = 'מצב למידה: עברית ואז אנגלית';
+      } else {
+        learnWrapEl.classList.remove('visible');
+        choicesEl.style.display = 'grid';
+        nextBtn.style.display = 'none';
+        enPromptEl.textContent = 'Game Mode';
+        hePromptEl.textContent = 'מצב משחק: בחרו את המילה הנכונה';
+      }
+      updateHUD();
+    }
+
+    function speakLearning(item) {
+      speechSynthesis.cancel();
+      speak(item.he, 'he-IL', 0.82);
+      setTimeout(() => speak(item.en, 'en-US', 0.86), 850);
+    }
+
+    function speakGamePrompt(item) {
+      speechSynthesis.cancel();
+      speak(`Find ${item.en}`, 'en-US', 0.86);
+    }
+
+    function renderLearningCard(item) {
+      learnImgEl.src = item.image;
+      learnImgEl.alt = item.en;
+      learnHeEl.textContent = item.he;
+      learnEnEl.textContent = item.en;
+    }
+
+    function nextLearningWord() {
+      currentTarget = pickRandom(items);
+      renderLearningCard(currentTarget);
+      enPromptEl.textContent = `Learn: ${currentTarget.en}`;
+      hePromptEl.textContent = `${currentTarget.he} = ${currentTarget.en}`;
+      statusEl.textContent = '';
+      speakLearning(currentTarget);
+    }
+
+    function renderGameChoices() {
+      choicesEl.innerHTML = '';
+      currentChoices.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'choice';
+        btn.type = 'button';
+        btn.dataset.key = item.key;
+        btn.innerHTML = `
+          <img alt="${item.en}" src="${item.image}" loading="lazy" />
+          <div class="labels">${item.he}</div>
+        `;
+        btn.addEventListener('click', () => handleGameAnswer(btn, item));
+        choicesEl.appendChild(btn);
+      });
+    }
+
+    function nextGameRound() {
+      round += 1;
+      updateHUD();
+      statusEl.textContent = '';
+
+      currentTarget = pickRandom(items);
+      const pool = items.filter(i => i.key !== currentTarget.key);
+      const optionCount = round <= 3 ? 3 : 4;
+      currentChoices = shuffle([currentTarget, ...shuffle(pool).slice(0, optionCount - 1)]);
+
+      enPromptEl.textContent = `Find: ${currentTarget.en}`;
+      hePromptEl.textContent = 'בחרו את המילה המתאימה בעברית';
+
+      renderGameChoices();
+      acceptingAnswer = true;
+      speakGamePrompt(currentTarget);
+    }
+
+    function handleGameAnswer(buttonEl, chosenItem) {
+      if (!acceptingAnswer || mode !== 'game') return;
+      acceptingAnswer = false;
+      const buttons = [...document.querySelectorAll('.choice')];
+
+      if (chosenItem.key === currentTarget.key) {
+        score += 10;
+        streak += 1;
+        buttonEl.classList.add('correct');
+        statusEl.textContent = 'נכון! כל הכבוד!';
+        speechSynthesis.cancel();
+        speak(`Great. ${currentTarget.en}`, 'en-US', 0.88);
+      } else {
+        streak = 0;
+        buttonEl.classList.add('wrong');
+        const correct = buttons.find(b => b.dataset.key === currentTarget.key);
+        if (correct) correct.classList.add('correct');
+        statusEl.textContent = `לא נורא. התשובה היא: ${currentTarget.he}`;
+        speechSynthesis.cancel();
+        speak(`The answer is ${currentTarget.en}`, 'en-US', 0.85);
+      }
+
+      updateHUD();
+      setTimeout(nextGameRound, 1500);
+    }
+
+    function startMode() {
+      repeatBtn.disabled = false;
+      if (mode === 'learn') {
+        round = 0;
+        score = 0;
+        streak = 0;
+        updateHUD();
+        nextLearningWord();
+      } else {
+        score = 0;
+        streak = 0;
+        round = 0;
+        updateHUD();
+        nextGameRound();
+      }
+    }
+
+    startBtn.addEventListener('click', startMode);
+
+    repeatBtn.addEventListener('click', () => {
+      if (!currentTarget) return;
+      if (mode === 'learn') speakLearning(currentTarget);
+      if (mode === 'game') speakGamePrompt(currentTarget);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (mode === 'learn') nextLearningWord();
+    });
+
+    modeLearnBtn.addEventListener('click', () => setMode('learn'));
+    modeGameBtn.addEventListener('click', () => setMode('game'));
+
+    if ('speechSynthesis' in window) {
+      speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+    }
+
+    setMode('learn');
+  </script>
+</body>
+</html>
