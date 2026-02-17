@@ -71,6 +71,11 @@
       padding: 6px 12px;
     }
 
+    .chip.turn-active {
+      border-color: #2f8f3b;
+      box-shadow: 0 0 0 3px #2f8f3b2a;
+    }
+
     .content {
       padding: 20px;
       display: grid;
@@ -129,14 +134,26 @@
 
     .choice {
       background: #fff;
-      border: 3px solid #d9e5d0;
+      border: 5px solid #a7bf92;
       border-radius: 16px;
       padding: 10px;
       display: grid;
       gap: 8px;
       min-height: 180px;
       align-content: start;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+    }
+
+    .choice:hover {
+      border-color: #5f8f45;
+      box-shadow: 0 0 0 6px #5f8f4526;
+      transform: translateY(-1px);
+    }
+
+    .choice:focus-visible {
+      outline: none;
+      border-color: #2f8f3b;
+      box-shadow: 0 0 0 7px #2f8f3b3a;
     }
 
     .choice img,
@@ -163,12 +180,12 @@
 
     .choice.correct {
       border-color: var(--accent);
-      box-shadow: 0 0 0 5px #2f8f3b22;
+      box-shadow: 0 0 0 8px #2f8f3b44;
     }
 
     .choice.wrong {
       border-color: var(--wrong);
-      box-shadow: 0 0 0 5px #d84a4a1f;
+      box-shadow: 0 0 0 8px #d84a4a42;
     }
 
     .learn-wrap {
@@ -177,6 +194,86 @@
     }
 
     .learn-wrap.visible { display: flex; }
+
+    .memory-wrap { display: none; }
+    .memory-wrap.visible { display: block; }
+
+    .memory-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .memory-card {
+      border: 4px solid #9db88a;
+      border-radius: 14px;
+      background: #fff;
+      height: 186px;
+      padding: 8px;
+      display: grid;
+      place-items: center;
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .memory-card:hover {
+      border-color: #4f8440;
+      box-shadow: 0 0 0 5px #4f844026;
+      transform: translateY(-1px);
+    }
+
+    .memory-card .face-back,
+    .memory-card .face-front {
+      width: 100%;
+      display: grid;
+      place-items: center;
+      gap: 6px;
+      height: 100%;
+      grid-template-rows: 112px 36px;
+    }
+
+    .memory-card .face-back img,
+    .memory-card .face-front img {
+      width: 100%;
+      aspect-ratio: 1/1;
+      height: 112px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      border-radius: 10px;
+      border: 2px solid #c8d9ba;
+      background: linear-gradient(160deg, #fbfff7, #edf8e6);
+      padding: 8px;
+    }
+
+    .memory-card .face-back .back-label {
+      color: #2f5d34;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      height: 36px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .memory-card .face-front .front-he {
+      direction: rtl;
+      font-size: 1.08rem;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.1;
+      height: 36px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .memory-card.matched {
+      visibility: hidden;
+      pointer-events: none;
+    }
 
     .learn-card {
       width: min(340px, 100%);
@@ -218,6 +315,8 @@
     @media (max-width: 740px) {
       .grid { grid-template-columns: 1fr; }
       .choice { min-height: 140px; }
+      .memory-board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .memory-card { height: 176px; }
     }
   </style>
 </head>
@@ -230,6 +329,9 @@
         <span class="chip">Score: <span id="score">0</span></span>
         <span class="chip">Streak: <span id="streak">0</span></span>
         <span class="chip">Round: <span id="round">0</span></span>
+        <span id="p1Chip" class="chip" style="display:none">Player 1: <span id="p1Score">0</span></span>
+        <span id="p2Chip" class="chip" style="display:none">Player 2: <span id="p2Score">0</span></span>
+        <span id="turnChip" class="chip" style="display:none">Turn: <span id="turnLabel">Player 1</span></span>
       </div>
     </div>
 
@@ -242,6 +344,7 @@
       <div class="controls">
         <button id="modeLearnBtn" class="btn-soft btn-mode active">Learning / למידה</button>
         <button id="modeGameBtn" class="btn-soft btn-mode">Game / משחק</button>
+        <button id="modeMemoryBtn" class="btn-soft btn-mode">Memory / זיכרון</button>
         <button id="startBtn" class="btn-main">Start / התחל</button>
         <button id="repeatBtn" class="btn-alt" disabled>Repeat Sound / שוב</button>
         <button id="nextBtn" class="btn-alt">Next Word / מילה הבאה</button>
@@ -255,12 +358,16 @@
         </div>
       </div>
 
+      <div id="memoryWrap" class="memory-wrap">
+        <div id="memoryBoard" class="memory-board"></div>
+      </div>
+
       <div id="choices" class="grid"></div>
       <div id="status" class="status"></div>
     </div>
 
     <div class="footer">
-      Learning mode: Hebrew then English + image. Game mode: hear English only, choose image + Hebrew label.
+      Learning mode: Hebrew then English + image. Game mode: hear English only, choose image + Hebrew label. Memory mode: 2 players, find pairs.
     </div>
   </div>
 
@@ -310,6 +417,12 @@
     const streakEl = document.getElementById('streak');
     const roundEl = document.getElementById('round');
     const modeLabelEl = document.getElementById('modeLabel');
+    const p1ChipEl = document.getElementById('p1Chip');
+    const p2ChipEl = document.getElementById('p2Chip');
+    const turnChipEl = document.getElementById('turnChip');
+    const p1ScoreEl = document.getElementById('p1Score');
+    const p2ScoreEl = document.getElementById('p2Score');
+    const turnLabelEl = document.getElementById('turnLabel');
     const enPromptEl = document.getElementById('enPrompt');
     const hePromptEl = document.getElementById('hePrompt');
     const startBtn = document.getElementById('startBtn');
@@ -317,8 +430,11 @@
     const nextBtn = document.getElementById('nextBtn');
     const modeLearnBtn = document.getElementById('modeLearnBtn');
     const modeGameBtn = document.getElementById('modeGameBtn');
+    const modeMemoryBtn = document.getElementById('modeMemoryBtn');
     const choicesEl = document.getElementById('choices');
     const learnWrapEl = document.getElementById('learnWrap');
+    const memoryWrapEl = document.getElementById('memoryWrap');
+    const memoryBoardEl = document.getElementById('memoryBoard');
     const learnImgEl = document.getElementById('learnImg');
     const learnHeEl = document.getElementById('learnHe');
     const learnEnEl = document.getElementById('learnEn');
@@ -331,6 +447,13 @@
     let currentTarget = null;
     let currentChoices = [];
     let acceptingAnswer = false;
+    let memoryDeck = [];
+    let memoryFirst = null;
+    let memorySecond = null;
+    let memoryBusy = false;
+    let memoryTurn = 0;
+    let memoryScores = [0, 0];
+    let memoryPairsLeft = 0;
 
     function pickRandom(arr) {
       return arr[Math.floor(Math.random() * arr.length)];
@@ -360,31 +483,59 @@
       scoreEl.textContent = score;
       streakEl.textContent = streak;
       roundEl.textContent = round;
-      modeLabelEl.textContent = mode === 'learn' ? 'Learning' : 'Game';
+      if (mode === 'learn') modeLabelEl.textContent = 'Learning';
+      if (mode === 'game') modeLabelEl.textContent = 'Game';
+      if (mode === 'memory') modeLabelEl.textContent = 'Memory';
+    }
+
+    function updateMemoryHUD() {
+      p1ScoreEl.textContent = memoryScores[0];
+      p2ScoreEl.textContent = memoryScores[1];
+      turnLabelEl.textContent = memoryTurn === 0 ? 'Player 1' : 'Player 2';
+      p1ChipEl.classList.toggle('turn-active', memoryTurn === 0);
+      p2ChipEl.classList.toggle('turn-active', memoryTurn === 1);
     }
 
     function setMode(nextMode) {
       mode = nextMode;
       modeLearnBtn.classList.toggle('active', mode === 'learn');
       modeGameBtn.classList.toggle('active', mode === 'game');
+      modeMemoryBtn.classList.toggle('active', mode === 'memory');
       choicesEl.innerHTML = '';
+      memoryBoardEl.innerHTML = '';
       statusEl.textContent = '';
       speechSynthesis.cancel();
+      p1ChipEl.style.display = mode === 'memory' ? 'inline-block' : 'none';
+      p2ChipEl.style.display = mode === 'memory' ? 'inline-block' : 'none';
+      turnChipEl.style.display = mode === 'memory' ? 'inline-block' : 'none';
 
       if (mode === 'learn') {
         learnWrapEl.classList.add('visible');
+        memoryWrapEl.classList.remove('visible');
         choicesEl.style.display = 'none';
         nextBtn.style.display = 'inline-block';
+        repeatBtn.style.display = 'inline-block';
         enPromptEl.textContent = 'Learning Mode';
         hePromptEl.textContent = 'מצב למידה: עברית ואז אנגלית';
-      } else {
+      } else if (mode === 'game') {
         learnWrapEl.classList.remove('visible');
+        memoryWrapEl.classList.remove('visible');
         choicesEl.style.display = 'grid';
         nextBtn.style.display = 'none';
+        repeatBtn.style.display = 'inline-block';
         enPromptEl.textContent = 'Game Mode';
         hePromptEl.textContent = 'מצב משחק: בחרו את המילה הנכונה';
+      } else {
+        learnWrapEl.classList.remove('visible');
+        memoryWrapEl.classList.add('visible');
+        choicesEl.style.display = 'none';
+        nextBtn.style.display = 'none';
+        repeatBtn.style.display = 'none';
+        enPromptEl.textContent = 'Memory Mode - 2 Players';
+        hePromptEl.textContent = 'מצאו זוגות. זוג נכון = נקודה + תור נוסף';
       }
       updateHUD();
+      updateMemoryHUD();
     }
 
     function speakLearning(item) {
@@ -474,6 +625,125 @@
       setTimeout(nextGameRound, 1500);
     }
 
+    function isMemoryOpen(card) {
+      return card.matched || memoryFirst?.id === card.id || memorySecond?.id === card.id;
+    }
+
+    function renderMemoryBoard() {
+      memoryBoardEl.innerHTML = '';
+      memoryDeck.forEach(card => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `memory-card${card.matched ? ' matched' : ''}`;
+        btn.disabled = card.matched || memoryBusy;
+
+        if (isMemoryOpen(card)) {
+          btn.innerHTML = `
+            <div class="face-front">
+              <img alt="${card.item.en}" src="${card.item.image}" loading="lazy" />
+              <div class="front-he">${card.item.he}</div>
+            </div>
+          `;
+        } else {
+          btn.innerHTML = `
+            <div class="face-back">
+              <img alt="Minecraft logo" src="./assets/images/card_back_logo.png" loading="lazy" />
+              <div class="back-label">MEMORY</div>
+            </div>
+          `;
+        }
+
+        btn.addEventListener('click', () => onMemoryCardClick(card.id));
+        memoryBoardEl.appendChild(btn);
+      });
+    }
+
+    function finishMemoryGame() {
+      if (memoryScores[0] === memoryScores[1]) {
+        statusEl.textContent = `תיקו! ${memoryScores[0]} - ${memoryScores[1]}`;
+      } else if (memoryScores[0] > memoryScores[1]) {
+        statusEl.textContent = `שחקן 1 ניצח! ${memoryScores[0]} - ${memoryScores[1]}`;
+      } else {
+        statusEl.textContent = `שחקן 2 ניצח! ${memoryScores[1]} - ${memoryScores[0]}`;
+      }
+      enPromptEl.textContent = 'Memory Finished';
+      hePromptEl.textContent = 'המשחק נגמר. לחצו Start למשחק חדש';
+    }
+
+    function onMemoryCardClick(cardId) {
+      if (mode !== 'memory' || memoryBusy) return;
+      const card = memoryDeck.find(c => c.id === cardId);
+      if (!card || card.matched) return;
+      if (memoryFirst && memoryFirst.id === card.id) return;
+      if (memorySecond) return;
+
+      if (!memoryFirst) {
+        memoryFirst = card;
+        renderMemoryBoard();
+        return;
+      }
+
+      memorySecond = card;
+      round += 1;
+      updateHUD();
+      renderMemoryBoard();
+
+      if (memoryFirst.item.key === memorySecond.item.key) {
+        memoryScores[memoryTurn] += 1;
+        memoryFirst.matched = true;
+        memorySecond.matched = true;
+        memoryPairsLeft -= 1;
+        statusEl.textContent = `זוג נכון! שחקן ${memoryTurn + 1} ממשיך`;
+        updateMemoryHUD();
+        setTimeout(() => {
+          memoryFirst = null;
+          memorySecond = null;
+          renderMemoryBoard();
+          if (memoryPairsLeft === 0) {
+            finishMemoryGame();
+          }
+        }, 700);
+      } else {
+        memoryBusy = true;
+        statusEl.textContent = 'לא זוג. מחליפים תור...';
+        setTimeout(() => {
+          memoryFirst = null;
+          memorySecond = null;
+          memoryTurn = memoryTurn === 0 ? 1 : 0;
+          memoryBusy = false;
+          updateMemoryHUD();
+          statusEl.textContent = `תור שחקן ${memoryTurn + 1}`;
+          renderMemoryBoard();
+        }, 1100);
+      }
+    }
+
+    function startMemoryGame() {
+      score = 0;
+      streak = 0;
+      round = 0;
+      memoryTurn = 0;
+      memoryScores = [0, 0];
+      memoryBusy = false;
+      memoryFirst = null;
+      memorySecond = null;
+
+      const pairCount = 8;
+      const selected = shuffle(items).slice(0, pairCount);
+      memoryDeck = shuffle(selected.flatMap(item => ([
+        { id: `${item.key}-a`, item, matched: false },
+        { id: `${item.key}-b`, item, matched: false }
+      ])));
+      memoryPairsLeft = pairCount;
+
+      enPromptEl.textContent = 'Memory Mode - 2 Players';
+      hePromptEl.textContent = 'מצאו זוגות. זוג נכון = נקודה + תור נוסף';
+      statusEl.textContent = 'תור שחקן 1';
+      updateHUD();
+      updateMemoryHUD();
+      renderMemoryBoard();
+    }
+
     function startMode() {
       repeatBtn.disabled = false;
       if (mode === 'learn') {
@@ -482,12 +752,14 @@
         streak = 0;
         updateHUD();
         nextLearningWord();
-      } else {
+      } else if (mode === 'game') {
         score = 0;
         streak = 0;
         round = 0;
         updateHUD();
         nextGameRound();
+      } else {
+        startMemoryGame();
       }
     }
 
@@ -505,6 +777,7 @@
 
     modeLearnBtn.addEventListener('click', () => setMode('learn'));
     modeGameBtn.addEventListener('click', () => setMode('game'));
+    modeMemoryBtn.addEventListener('click', () => setMode('memory'));
 
     if ('speechSynthesis' in window) {
       speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();

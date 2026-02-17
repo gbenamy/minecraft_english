@@ -6,6 +6,7 @@ Simple web game for learning English vocabulary with Minecraft-style items.
 - Two modes:
 - `Learning / למידה`: says Hebrew first, then English, with one item image.
 - `Game / משחק`: says only `Find <english word>`, then shows multiple image cards with Hebrew labels.
+- `Memory / זיכרון`: 2-player turn-based memory game (find pairs). Match gives 1 point, removes pair, and gives an extra turn.
 - Local image assets in `assets/images` (no runtime network dependency).
 - Score, streak, and round tracking in game mode.
 
