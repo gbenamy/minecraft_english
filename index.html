@@ -198,17 +198,54 @@
     .memory-wrap { display: none; }
     .memory-wrap.visible { display: block; }
 
+    .memory-difficulty {
+      margin: 0 auto 14px;
+      width: min(680px, 100%);
+      background: #f6fbf0;
+      border: 2px solid #cfe2bc;
+      border-radius: 14px;
+      padding: 10px 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .memory-difficulty .title {
+      text-align: center;
+      font-weight: 800;
+      font-size: 0.96rem;
+    }
+
+    .memory-difficulty input[type="range"] {
+      width: 100%;
+      accent-color: #2f8f3b;
+    }
+
+    .memory-difficulty .scale {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #3b4d41;
+    }
+
+    .memory-difficulty .picked {
+      text-align: center;
+      font-weight: 900;
+      color: #214e2d;
+    }
+
     .memory-board {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(var(--memory-cols, 4), minmax(0, 1fr));
       gap: 12px;
+      align-items: stretch;
     }
 
     .memory-card {
       border: 4px solid #9db88a;
       border-radius: 14px;
       background: #fff;
-      height: 186px;
+      height: var(--memory-card-h, 186px);
       padding: 8px;
       display: grid;
       place-items: center;
@@ -228,20 +265,29 @@
       place-items: center;
       gap: 6px;
       height: 100%;
-      grid-template-rows: 112px 36px;
+      grid-template-rows: minmax(0, 1fr) 36px;
     }
 
     .memory-card .face-back img,
     .memory-card .face-front img {
       width: 100%;
       aspect-ratio: 1/1;
-      height: 112px;
+      height: clamp(72px, calc(var(--memory-card-h, 186px) - 64px), 140px);
       object-fit: contain;
       image-rendering: pixelated;
       border-radius: 10px;
       border: 2px solid #c8d9ba;
       background: linear-gradient(160deg, #fbfff7, #edf8e6);
       padding: 8px;
+    }
+
+    .memory-card .face-back img {
+      width: 84%;
+      height: clamp(64px, calc(var(--memory-card-h, 186px) - 72px), 120px);
+      border-radius: 12px;
+      border-color: #b7cead;
+      background: #eef6e7;
+      padding: 6px;
     }
 
     .memory-card .face-back .back-label {
@@ -268,6 +314,22 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
+    }
+
+    .memory-board.compact .memory-card {
+      padding: 6px;
+      border-width: 3px;
+    }
+
+    .memory-board.compact .memory-card .face-front .front-he,
+    .memory-board.compact .memory-card .face-back .back-label {
+      font-size: 0.9rem;
+      height: 30px;
+    }
+
+    .memory-board.compact .memory-card .face-back,
+    .memory-board.compact .memory-card .face-front {
+      grid-template-rows: minmax(0, 1fr) 30px;
     }
 
     .memory-card.matched {
@@ -315,8 +377,6 @@
     @media (max-width: 740px) {
       .grid { grid-template-columns: 1fr; }
       .choice { min-height: 140px; }
-      .memory-board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .memory-card { height: 176px; }
     }
   </style>
 </head>
@@ -359,6 +419,15 @@
       </div>
 
       <div id="memoryWrap" class="memory-wrap">
+        <div class="memory-difficulty">
+          <div class="title">Memory Difficulty / רמת קושי</div>
+          <input id="memorySizeSlider" type="range" min="0" max="4" step="1" value="0" />
+          <div class="scale">
+            <span>קל (16)</span>
+            <span>הכי קשה (32)</span>
+          </div>
+          <div id="memoryPicked" class="picked">16 cards</div>
+        </div>
         <div id="memoryBoard" class="memory-board"></div>
       </div>
 
@@ -474,6 +543,8 @@
     const choicesEl = document.getElementById('choices');
     const learnWrapEl = document.getElementById('learnWrap');
     const memoryWrapEl = document.getElementById('memoryWrap');
+    const memorySizeSliderEl = document.getElementById('memorySizeSlider');
+    const memoryPickedEl = document.getElementById('memoryPicked');
     const memoryBoardEl = document.getElementById('memoryBoard');
     const learnImgEl = document.getElementById('learnImg');
     const learnHeEl = document.getElementById('learnHe');
@@ -495,6 +566,8 @@
     let memoryTurn = 0;
     let memoryScores = [0, 0];
     let memoryPairsLeft = 0;
+    const memoryCardOptions = [16, 20, 24, 28, 32];
+    let memorySizeIndex = 0;
 
     function pickRandom(arr) {
       return arr[Math.floor(Math.random() * arr.length)];
@@ -539,6 +612,52 @@
       turnLabelEl.textContent = memoryTurn === 0 ? 'Player 1' : 'Player 2';
       p1ChipEl.classList.toggle('turn-active', memoryTurn === 0);
       p2ChipEl.classList.toggle('turn-active', memoryTurn === 1);
+    }
+
+    function updateMemoryDifficultyUI() {
+      const cards = memoryCardOptions[memorySizeIndex];
+      const level = memorySizeIndex === 0 ? 'קל' : (memorySizeIndex === 4 ? 'הכי קשה' : 'בינוני');
+      memoryPickedEl.textContent = `${cards} קלפים (${level})`;
+      if (mode === 'memory' && modeStarted.memory && memoryDeck.length) updateMemoryLayout();
+    }
+
+    function updateMemoryLayout() {
+      if (mode !== 'memory') return;
+      if (!memoryDeck.length) return;
+      const cards = memoryCardOptions[memorySizeIndex];
+      const boardRect = memoryBoardEl.getBoundingClientRect();
+      const boardWidth = Math.max(280, boardRect.width || memoryBoardEl.clientWidth || 320);
+      const gap = 12;
+
+      const isNarrow = window.innerWidth < 740;
+      let cols;
+      if (isNarrow) {
+        if (cards <= 16) cols = 4;
+        else if (cards <= 24) cols = 5;
+        else cols = 6;
+      } else {
+        if (cards <= 16) cols = 4;
+        else if (cards <= 20) cols = 5;
+        else if (cards <= 24) cols = 6;
+        else if (cards <= 28) cols = 7;
+        else cols = 8;
+      }
+
+      const cardW = (boardWidth - gap * (cols - 1)) / cols;
+      // Stable heights per difficulty so images stay readable and layout doesn't jump.
+      let targetH;
+      if (cards <= 16) targetH = isNarrow ? 150 : 172;
+      else if (cards <= 20) targetH = isNarrow ? 142 : 160;
+      else if (cards <= 24) targetH = isNarrow ? 132 : 148;
+      else if (cards <= 28) targetH = isNarrow ? 122 : 136;
+      else targetH = isNarrow ? 112 : 124;
+
+      const cardH = Math.max(96, Math.floor(Math.min(cardW * 1.1, targetH)));
+      const best = { cols, cardH };
+
+      memoryBoardEl.style.setProperty('--memory-cols', String(best.cols));
+      memoryBoardEl.style.setProperty('--memory-card-h', `${best.cardH}px`);
+      memoryBoardEl.classList.toggle('compact', best.cardH < 145);
     }
 
     function setMode(nextMode) {
@@ -720,6 +839,7 @@
     }
 
     function onMemoryCardClick(cardId) {
+      if (!modeStarted.memory || !memoryDeck.length) return;
       if (mode !== 'memory' || memoryBusy) return;
       const card = memoryDeck.find(c => c.id === cardId);
       if (!card || card.matched) return;
@@ -777,13 +897,14 @@
       memoryFirst = null;
       memorySecond = null;
 
-      const pairCount = 8;
+      const pairCount = memoryCardOptions[memorySizeIndex] / 2;
       const selected = shuffle(items).slice(0, pairCount);
       memoryDeck = shuffle(selected.flatMap(item => ([
         { id: `${item.key}-a`, item, matched: false },
         { id: `${item.key}-b`, item, matched: false }
       ])));
       memoryPairsLeft = pairCount;
+      updateMemoryLayout();
 
       enPromptEl.textContent = 'Memory Mode - 2 Players';
       hePromptEl.textContent = 'מצאו זוגות. זוג נכון = נקודה + תור נוסף';
@@ -791,6 +912,25 @@
       updateHUD();
       updateMemoryHUD();
       renderMemoryBoard();
+    }
+
+    function resetMemoryToStartState() {
+      modeStarted.memory = false;
+      score = 0;
+      streak = 0;
+      round = 0;
+      memoryTurn = 0;
+      memoryScores = [0, 0];
+      memoryBusy = false;
+      memoryFirst = null;
+      memorySecond = null;
+      memoryPairsLeft = 0;
+      memoryDeck = [];
+      memoryBoardEl.innerHTML = '';
+      setMode('memory');
+      statusEl.textContent = 'שיניתם קושי. לחצו Start למשחק חדש';
+      updateHUD();
+      updateMemoryHUD();
     }
 
     function startMode() {
@@ -829,11 +969,22 @@
     modeLearnBtn.addEventListener('click', () => setMode('learn'));
     modeGameBtn.addEventListener('click', () => setMode('game'));
     modeMemoryBtn.addEventListener('click', () => setMode('memory'));
+    memorySizeSliderEl.addEventListener('input', (e) => {
+      memorySizeIndex = Number(e.target.value);
+      updateMemoryDifficultyUI();
+      if (mode === 'memory') {
+        resetMemoryToStartState();
+      }
+    });
+    window.addEventListener('resize', () => {
+      if (mode === 'memory') updateMemoryLayout();
+    });
 
     if ('speechSynthesis' in window) {
       speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
     }
 
+    updateMemoryDifficultyUI();
     setMode('learn');
   </script>
 </body>
